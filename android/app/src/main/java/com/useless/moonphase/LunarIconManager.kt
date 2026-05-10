@@ -17,33 +17,36 @@ object LunarIconManager {
         "Waning Gibbous" to ".MainActivityWaningGibbous",
         "Last Quarter" to ".MainActivityLastQuarter",
         "Waning Crescent" to ".MainActivityWaningCrescent",
-        "New Moon" to "" // Default MainActivity
+        "New Moon" to ".MainActivityDefault"
     )
 
     fun updateIcon(context: Context, phaseName: String) {
         val targetAlias = phaseToAlias[phaseName] ?: return
         val currentPackage = context.packageName
-        
         val pm = context.packageManager
         
-        // List of all possible aliases (including the default one)
-        val allComponents = phaseToAlias.values.map { 
-            if (it.isEmpty()) ".MainActivity" else it
+        // Ensure the absolute target alias path
+        val targetComponentName = ComponentName(currentPackage, "$currentPackage$targetAlias")
+
+        // Check if the target is already enabled. If so, do nothing.
+        if (pm.getComponentEnabledSetting(targetComponentName) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            return
         }
 
-        allComponents.forEach { alias ->
-            val componentName = ComponentName(currentPackage, "$currentPackage$alias")
-            val newState = if (alias == (if (targetAlias.isEmpty()) ".MainActivity" else targetAlias)) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            }
-            
-            // Only update if the state has changed to avoid unnecessary churn
-            if (pm.getComponentEnabledSetting(componentName) != newState) {
+        // Enable the new alias first
+        pm.setComponentEnabledSetting(
+            targetComponentName,
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
+        )
+
+        // Disable all other aliases
+        phaseToAlias.values.forEach { alias ->
+            if (alias != targetAlias) {
+                val comp = ComponentName(currentPackage, "$currentPackage$alias")
                 pm.setComponentEnabledSetting(
-                    componentName,
-                    newState,
+                    comp,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                     PackageManager.DONT_KILL_APP
                 )
             }

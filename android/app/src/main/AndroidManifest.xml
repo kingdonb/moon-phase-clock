@@ -8,16 +8,26 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         
+        <!-- The Target Activity: ALWAYS enabled, but NOT the launcher directly -->
         <activity
             android:name="com.useless.moonphase.MainActivity"
             android:exported="true">
+        </activity>
+
+        <!-- Default Alias: The initial launcher entry point -->
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityDefault"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:targetActivity="com.useless.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
-        <!-- Aliases for Dynamic Icons -->
+        <!-- Phased Aliases -->
         <activity-alias
             android:name="com.useless.moonphase.MainActivityFull"
             android:enabled="false"
