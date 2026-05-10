@@ -1,0 +1,54 @@
+name: Moon Oracle CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-brain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+      - name: Build WASM Brain
+        run: |
+          cd brain
+          cargo build --target wasm32-wasip1 --release
+      - name: Upload Brain Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moon-phase-wasm
+          path: brain/target/wasm32-wasip1/release/moon_phase_brain.wasm
+
+  build-android:
+    needs: build-brain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Download Brain Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: moon-phase-wasm
+          path: android/app/src/main/assets/
+      - name: Rename WASM Asset
+        run: mv android/app/src/main/assets/moon_phase_brain.wasm android/app/src/main/assets/moon-phase.wasm
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: moon-oracle-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
