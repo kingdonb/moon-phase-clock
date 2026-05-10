@@ -3,6 +3,8 @@ name: Moon Oracle CI
 on:
   push:
     branches: [ main ]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches: [ main ]
 
@@ -47,8 +49,38 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew assembleDebug
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: moon-oracle-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-android
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: moon-oracle-debug-apk
+          path: ./
+      - name: Download WASM Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: moon-phase-wasm
+          path: ./
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: |
+            app-debug.apk
+            moon_phase_brain.wasm
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
