@@ -74,7 +74,7 @@ fun MoonPhaseScreen(engine: WasmEngine?) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "THE ORACLE",
+            text = "THE MOON",
             style = MaterialTheme.typography.labelLarge,
             color = Color.Gray,
             letterSpacing = 4.sp
