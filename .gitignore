@@ -8,3 +8,4 @@ android/app/native-libs/
 brain/.venv/
 brain/__pycache__/
 brain/moon-phase-py.wasm
+brain/target/
