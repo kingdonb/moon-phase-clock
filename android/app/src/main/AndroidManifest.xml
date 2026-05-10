@@ -3,9 +3,11 @@
 
     <application
         android:allowBackup="true"
-        android:label="Moon Phase Clock"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -14,6 +16,92 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Aliases for Dynamic Icons -->
+        <activity-alias
+            android:name=".MainActivityFull"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_full"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityWaxingCrescent"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waxing_crescent"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityFirstQuarter"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_first_quarter"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityWaxingGibbous"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waxing_gibbous"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityWaningGibbous"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waning_gibbous"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityLastQuarter"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_last_quarter"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityWaningCrescent"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waning_crescent"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
     </application>
 
 </manifest>
