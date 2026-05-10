@@ -3,17 +3,115 @@
 
     <application
         android:allowBackup="true"
-        android:label="Moon Phase Clock"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        
+        <!-- The Target Activity: ALWAYS enabled, but NOT the launcher directly -->
         <activity
-            android:name=".MainActivity"
+            android:name="com.useless.moonphase.MainActivity"
             android:exported="true">
+        </activity>
+
+        <!-- Default Alias: The initial launcher entry point -->
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityDefault"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:targetActivity="com.useless.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <!-- Phased Aliases -->
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityFull"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_full"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityWaxingCrescent"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waxing_crescent"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityFirstQuarter"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_first_quarter"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityWaxingGibbous"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waxing_gibbous"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityWaningGibbous"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waning_gibbous"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityLastQuarter"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_last_quarter"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.useless.moonphase.MainActivityWaningCrescent"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_waning_crescent"
+            android:targetActivity="com.useless.moonphase.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
     </application>
 
 </manifest>
