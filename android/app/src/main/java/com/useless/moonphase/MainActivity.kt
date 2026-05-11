@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
+    private var currentPhaseName: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -36,18 +38,28 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF0D0D0D)
                 ) {
-                    MoonPhaseScreen(wasmEngine)
+                    MoonPhaseScreen(wasmEngine) { phase ->
+                        currentPhaseName = phase
+                    }
                 }
             }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Update the app icon only when the user leaves the app to prevent the system
+        // from killing the process while the app is in the foreground.
+        currentPhaseName?.let { phase ->
+            LunarIconManager.updateIcon(this, phase)
         }
     }
 }
 
 @Composable
-fun MoonPhaseScreen(engine: WasmEngine?) {
+fun MoonPhaseScreen(engine: WasmEngine?, onPhaseCalculated: (String) -> Unit) {
     var moonData by remember { mutableStateOf<JSONObject?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         if (engine == null) {
@@ -57,11 +69,12 @@ fun MoonPhaseScreen(engine: WasmEngine?) {
         try {
             val now = System.currentTimeMillis() / 1000.0
             val result = engine.calculatePhase(now)
-            moonData = JSONObject(result)
+            val data = JSONObject(result)
+            moonData = data
             
-            // Update the app icon based on the current phase
-            moonData?.getString("phase_name")?.let { phase ->
-                LunarIconManager.updateIcon(context, phase)
+            // Notify the activity of the current phase
+            data.optString("phase_name")?.let { phase ->
+                onPhaseCalculated(phase)
             }
         } catch (e: Exception) {
             error = e.message
@@ -213,14 +226,14 @@ fun MoonView(illumination: Float, phaseName: String, modifier: Modifier = Modifi
                     path.addArc(
                         androidx.compose.ui.geometry.Rect(center.x - innerWidth, center.y - radius, center.x + innerWidth, center.y + radius),
                         -90f,
-                        180f
+                        -180f
                     )
                 } else {
                     val innerWidth = radius * (2f * illumination - 1f)
                     path.addArc(
                         androidx.compose.ui.geometry.Rect(center.x - innerWidth, center.y - radius, center.x + innerWidth, center.y + radius),
                         -90f,
-                        -180f
+                        180f
                     )
                 }
             }

@@ -11,5 +11,12 @@
         android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,14 A40,40 0 0 1 54,94 A20,40 0 0 0 54,14" />
+        android:pathData="M54,14 A40,40 0 0 1 54,94 A20,40 0 0 1 54,14" />
+    <!-- Craters -->
+    <path android:fillColor="#252525" android:pathData="M34,38m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+    <path android:fillColor="#E0E0E0" android:pathData="M58,74m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+    <path android:fillColor="#E0E0E0" android:pathData="M42,50m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path android:fillColor="#E0E0E0" android:pathData="M70,42m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+    <path android:fillColor="#E0E0E0" android:pathData="M50,62m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+    <path android:fillColor="#E0E0E0" android:pathData="M74,58m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
 </vector>

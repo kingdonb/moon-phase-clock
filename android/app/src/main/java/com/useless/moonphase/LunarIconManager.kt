@@ -4,6 +4,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 
+import android.util.Log
+
 /**
  * Handles the swapping of app icons based on the moon phase.
  */
@@ -25,19 +27,22 @@ object LunarIconManager {
         val currentPackage = context.packageName
         val pm = context.packageManager
         
+        Log.d("MoonPhase", "Updating icon to: $targetAlias for phase: $phaseName")
+
         // Ensure the absolute target alias path
         val targetComponentName = ComponentName(currentPackage, "$currentPackage$targetAlias")
 
-        // Check if the target is already enabled. If so, do nothing.
+        // Check if the target is already enabled.
         if (pm.getComponentEnabledSetting(targetComponentName) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            Log.d("MoonPhase", "Icon already set to $targetAlias")
             return
         }
 
-        // Enable the new alias first
+        // Enable the new alias
         pm.setComponentEnabledSetting(
             targetComponentName,
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.DONT_KILL_APP
+            0
         )
 
         // Disable all other aliases
@@ -47,9 +52,10 @@ object LunarIconManager {
                 pm.setComponentEnabledSetting(
                     comp,
                     PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP
+                    0
                 )
             }
         }
+        Log.d("MoonPhase", "Icon swap triggered.")
     }
 }
