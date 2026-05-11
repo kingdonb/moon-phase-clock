@@ -32,30 +32,33 @@ object LunarIconManager {
         // Ensure the absolute target alias path
         val targetComponentName = ComponentName(currentPackage, "$currentPackage$targetAlias")
 
-        // Check if the target is already enabled.
-        if (pm.getComponentEnabledSetting(targetComponentName) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
-            Log.d("MoonPhase", "Icon already set to $targetAlias")
-            return
-        }
-
         // Enable the new alias
         pm.setComponentEnabledSetting(
             targetComponentName,
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            0
+            PackageManager.DONT_KILL_APP
         )
 
         // Disable all other aliases
+        var anyDisabled = false
         phaseToAlias.values.forEach { alias ->
             if (alias != targetAlias) {
                 val comp = ComponentName(currentPackage, "$currentPackage$alias")
-                pm.setComponentEnabledSetting(
-                    comp,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    0
-                )
+                if (pm.getComponentEnabledSetting(comp) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                    pm.setComponentEnabledSetting(
+                        comp,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP
+                    )
+                    anyDisabled = true
+                }
             }
         }
-        Log.d("MoonPhase", "Icon swap triggered.")
+        
+        if (anyDisabled) {
+            Log.d("MoonPhase", "Icon swap completed (old aliases disabled).")
+        } else {
+            Log.d("MoonPhase", "Icon already correctly configured.")
+        }
     }
 }
