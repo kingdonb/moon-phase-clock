@@ -73,6 +73,10 @@ jobs:
         with:
           name: moon-phase-wasm
           path: ./
+      - name: Extract Release Notes
+        run: |
+          # Extract only the latest version section (everything from the first ## [ to the second ## [)
+          awk '/^## \[/ { p=1; count++ } count==2 { exit } p' CHANGELOG.md > release_body.md
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -81,6 +85,6 @@ jobs:
           files: |
             app-debug.apk
             moon_phase_brain.wasm
-          body_path: CHANGELOG.md
+          body_path: release_body.md
           draft: false
           prerelease: false
