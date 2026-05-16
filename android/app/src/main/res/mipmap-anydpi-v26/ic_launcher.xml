@@ -1,4 +1,4 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_moon_full" />
-    <foreground android:drawable="@drawable/ic_moon_full" />
+    <background android:drawable="@drawable/ic_moon_new" />
+    <foreground android:drawable="@drawable/ic_moon_new" />
 </adaptive-icon>
