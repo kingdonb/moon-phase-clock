@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2026-05-29
+
+### Changed
+- **Package Renaming**: Renamed app package and application ID to `com.urmanac.moonphase` to reflect domain ownership.
+- **SDK Upgrade**: Upgraded target and compile SDK to API level 35 to meet Google Play Store requirements.
+- **R8 Minification**: Enabled code/resource minification for release builds (with obfuscation disabled via Proguard/R8 rules).
+
 ## [0.0.4] - 2026-05-16
 
 ### Fixed
