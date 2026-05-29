@@ -1,4 +1,4 @@
-package com.useless.moonphase
+package com.urmanac.moonphase
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

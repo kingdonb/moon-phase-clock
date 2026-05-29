@@ -1,4 +1,4 @@
-package com.useless.moonphase
+package com.urmanac.moonphase
 
 import com.dylibso.chicory.runtime.Instance
 import com.dylibso.chicory.wasm.Parser

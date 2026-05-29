@@ -1,4 +1,4 @@
-package com.useless.moonphase
+package com.urmanac.moonphase
 
 import org.junit.Assert.assertTrue
 import org.junit.Test
