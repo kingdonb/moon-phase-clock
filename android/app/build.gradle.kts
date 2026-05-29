@@ -1,4 +1,4 @@
-// build.gradle.kts snippet for Useless Moon Phase Clock
+// build.gradle.kts snippet for Moon Phase Clock
 
 plugins {
     id("com.android.application")
@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.useless.moonphase"
+    namespace = "com.urmanac.moonphase"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.useless.moonphase"
+        applicationId = "com.urmanac.moonphase"
         minSdk = 26
         targetSdk = 34
         versionCode = 4
