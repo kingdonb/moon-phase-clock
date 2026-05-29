@@ -10,17 +10,17 @@
         
         <!-- The Target Activity: ALWAYS enabled, but NOT the launcher directly -->
         <activity
-            android:name="com.useless.moonphase.MainActivity"
+            android:name="com.urmanac.moonphase.MainActivity"
             android:exported="true">
         </activity>
 
         <!-- Default Alias: The initial launcher entry point -->
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityDefault"
+            android:name="com.urmanac.moonphase.MainActivityDefault"
             android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -29,11 +29,11 @@
 
         <!-- Phased Aliases -->
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityFull"
+            android:name="com.urmanac.moonphase.MainActivityFull"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_full"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -41,11 +41,11 @@
         </activity-alias>
 
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityWaxingCrescent"
+            android:name="com.urmanac.moonphase.MainActivityWaxingCrescent"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_waxing_crescent"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -53,11 +53,11 @@
         </activity-alias>
 
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityFirstQuarter"
+            android:name="com.urmanac.moonphase.MainActivityFirstQuarter"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_first_quarter"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -65,11 +65,11 @@
         </activity-alias>
 
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityWaxingGibbous"
+            android:name="com.urmanac.moonphase.MainActivityWaxingGibbous"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_waxing_gibbous"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -77,11 +77,11 @@
         </activity-alias>
 
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityWaningGibbous"
+            android:name="com.urmanac.moonphase.MainActivityWaningGibbous"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_waning_gibbous"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -89,11 +89,11 @@
         </activity-alias>
 
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityLastQuarter"
+            android:name="com.urmanac.moonphase.MainActivityLastQuarter"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_last_quarter"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -101,11 +101,11 @@
         </activity-alias>
 
         <activity-alias
-            android:name="com.useless.moonphase.MainActivityWaningCrescent"
+            android:name="com.urmanac.moonphase.MainActivityWaningCrescent"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_waning_crescent"
-            android:targetActivity="com.useless.moonphase.MainActivity">
+            android:targetActivity="com.urmanac.moonphase.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
