@@ -22,7 +22,7 @@ jobs:
           cd brain
           cargo build --target wasm32-wasip1 --release
       - name: Upload Brain Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: moon-phase-wasm
           path: brain/target/wasm32-wasip1/release/moon_phase_brain.wasm
@@ -39,7 +39,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Download Brain Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: moon-phase-wasm
           path: android/app/src/main/assets/
@@ -50,7 +50,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleDebug
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: moon-oracle-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
@@ -64,12 +64,12 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Download APK Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: moon-oracle-debug-apk
           path: ./
       - name: Download WASM Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: moon-phase-wasm
           path: ./
