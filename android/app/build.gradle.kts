@@ -65,4 +65,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material3:material3")
+    
+    // WorkManager for background periodic app-icon updates
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
