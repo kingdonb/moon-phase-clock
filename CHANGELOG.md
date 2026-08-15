@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2026-08-15
+
+### Fixed
+- **WorkManager Proguard Keep Rules**: Added explicit R8/Proguard rules for `androidx.work.**` and `androidx.room.**` to prevent startup crash (`Failed to create an instance of class androidx.work.impl.WorkDatabase`) in release builds with code minification enabled.
+
 ## [0.0.6] - 2026-08-15
 
 ### Added
