@@ -26,6 +26,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Ensure background periodic sync is armed (runs 4x daily to keep app icon fresh)
+        LunarSyncWorker.schedule(applicationContext)
+        
         val wasmEngine = try {
             WasmEngine(assets.open("moon-phase.wasm"))
         } catch (e: Exception) {

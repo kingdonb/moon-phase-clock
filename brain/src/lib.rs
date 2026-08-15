@@ -1,5 +1,6 @@
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 
+#[cfg(not(test))]
 use core::panic::PanicInfo;
 
 // Known New Moon: 2000-01-06 18:14:00 UTC
@@ -83,6 +84,7 @@ unsafe fn write_float(pos: &mut usize, f: f64) {
     }
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
