@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Build Toolchain**: Android Gradle Plugin 9.4.0 → 9.5.1 and Gradle 9.7.1 → 9.9.1, following the Android Studio 2026.2 update. Includes the earlier, unreleased move to AGP 9.4 with built-in Kotlin.
 - **Cosine Illumination**: The Oracle Brain now computes the illuminated fraction from the phase angle, `(1 - cos θ) / 2`, instead of a linear ramp. A mid-crescent reads about 15% rather than 25%; the quarters and the full moon are unchanged.
 - **Finer Illumination**: The brain reports illumination to four decimal places, correctly rounded. Previously one truncated digit meant the app only ever showed multiples of 10% and the drawn terminator moved in ten visible steps.
 - **Rounded Percentage**: The app rounds the displayed illumination percentage instead of truncating it.
