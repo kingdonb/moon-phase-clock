@@ -13,8 +13,8 @@ If a bug is found in the lunar calculation, it is fixed in exactly one place: th
 ## 🏗️ Project Structure
 
 - `brain/`: The core logic written in Rust, compiled to WASM.
-- `android/`: The **Moon Oracle** mobile application, built with Jetpack Compose.
-- `docs/`: Detailed architectural blueprints.
+- `android/`: The **Moon Oracle** mobile application, built with Jetpack Compose. The only host so far.
+- `docs/`: Detailed architectural blueprints, including the hosts that are still to be built.
 
 ## 🚀 Getting Started
 
@@ -42,13 +42,18 @@ cp target/wasm32-wasip1/release/moon_phase_brain.wasm ../android/app/src/main/as
 
 ## 🗺️ Roadmap
 
-- **Phase 2**: Iron Town Gateway (Spin API) and Terminal Interface (Go CLI).
-- **Phase 3**: AI Bridge (MCP Server) and K8s Reconciler.
-- **Phase 4**: Smooth animations and deeper OS integration.
+- **Phase 1** ✅ Shipped: the Rust WASM Brain and the Android app, with a launcher icon that follows the moon.
+- **0.1.0** 📝 TODO: true-moon phase timing using real orbital correction terms ([#10](https://github.com/kingdonb/moon-phase-clock/issues/10)). Today the Brain uses the mean lunar month, so phase changes can be several hours early or late.
+- **Phase 2** 📝 TODO: Iron Town Gateway (Spin API) and Terminal Interface (Go CLI).
+- **Phase 3** 📝 TODO: AI Bridge (MCP Server) and K8s Reconciler.
+- **Phase 4** 📝 TODO: Smooth animations and deeper OS integration.
+- **Someday** 📝 TODO: latitude/longitude inputs for hemisphere-correct orientation, moonrise/moonset, and sunrise/sunset.
+
+See [docs/MOON_PHASE_ARCHITECTURE.md](docs/MOON_PHASE_ARCHITECTURE.md) for what each piece is and which parts exist.
 
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ---
-*Status: Initialized | Architecture: Zero-Split-Brain*
+*Status: Brain and Android host shipped; other hosts TODO | Architecture: Zero-Split-Brain*

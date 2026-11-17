@@ -12,9 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Finer Illumination**: The brain reports illumination to four decimal places, correctly rounded. Previously one truncated digit meant the app only ever showed multiples of 10% and the drawn terminator moved in ten visible steps.
 - **Rounded Percentage**: The app rounds the displayed illumination percentage instead of truncating it.
 
+### Fixed
+- **Stale Phase While Open**: The app calculated the phase once at launch. It now recalculates every time it returns to the foreground and once a minute while visible, and asks the brain again before updating the launcher icon on leaving.
+- **Background Sync Retries**: `LunarSyncWorker` no longer asks WorkManager to retry with backoff after a failure. The calculation is local and deterministic, so a failed run is reported as failed and the next 6-hourly run tries again.
+
 ### Added
 - **Brain Test Suite**: `cargo test` covers the cosine approximation, illumination, phase windows, number formatting, the JSON contract and the exported entry point.
 - **Tests in CI**: CI now runs the Rust tests, and runs the Android unit tests against the brain it has just built.
+- **Documented Status**: The README roadmap and the architecture blueprint now mark what is built and what is still TODO, describe the brain's real interface, and explain what latitude/longitude would (and would not) change.
 
 ### Removed
 - **Duplicate WASM Binary**: The copy of `moon-phase.wasm` under test resources is gone; unit tests load the binary from `src/main/assets`, the one that ships.
