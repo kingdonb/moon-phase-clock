@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.json.JSONObject
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     private var currentPhaseName: String? = null
@@ -125,7 +126,7 @@ fun MoonPhaseScreen(engine: WasmEngine?, onPhaseCalculated: (String) -> Unit) {
                 textAlign = TextAlign.Center
             )
             
-            val illumPercent = (illum * 100).toInt()
+            val illumPercent = (illum * 100).roundToInt()
             Text(
                 text = "$illumPercent% ILLUMINATED",
                 style = MaterialTheme.typography.bodyLarge,

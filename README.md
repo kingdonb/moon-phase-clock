@@ -28,6 +28,7 @@ If a bug is found in the lunar calculation, it is fixed in exactly one place: th
 
 ```bash
 cd brain
+cargo test
 cargo build --target wasm32-wasip1 --release
 # Copy the binary to the Android assets
 cp target/wasm32-wasip1/release/moon_phase_brain.wasm ../android/app/src/main/assets/moon-phase.wasm

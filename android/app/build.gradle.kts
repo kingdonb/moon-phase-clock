@@ -43,6 +43,14 @@ android {
         }
     }
 
+    // Unit tests load the same WASM brain that ships in the app, so there is
+    // exactly one copy of the binary to keep current.
+    sourceSets {
+        getByName("test") {
+            resources.directories.add("src/main/assets")
+        }
+    }
+
     tasks.withType<Test> {
         val libPath = file("native-libs").absolutePath
         systemProperty("java.library.path", libPath)

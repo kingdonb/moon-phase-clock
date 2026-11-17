@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Cosine Illumination**: The Oracle Brain now computes the illuminated fraction from the phase angle, `(1 - cos θ) / 2`, instead of a linear ramp. A mid-crescent reads about 15% rather than 25%; the quarters and the full moon are unchanged.
+- **Finer Illumination**: The brain reports illumination to four decimal places, correctly rounded. Previously one truncated digit meant the app only ever showed multiples of 10% and the drawn terminator moved in ten visible steps.
+- **Rounded Percentage**: The app rounds the displayed illumination percentage instead of truncating it.
+
+### Added
+- **Brain Test Suite**: `cargo test` covers the cosine approximation, illumination, phase windows, number formatting, the JSON contract and the exported entry point.
+- **Tests in CI**: CI now runs the Rust tests, and runs the Android unit tests against the brain it has just built.
+
+### Removed
+- **Duplicate WASM Binary**: The copy of `moon-phase.wasm` under test resources is gone; unit tests load the binary from `src/main/assets`, the one that ships.
+
 ## [0.0.7] - 2026-08-15
 
 ### Fixed

@@ -17,6 +17,10 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-wasip1
+      - name: Test WASM Brain
+        run: |
+          cd brain
+          cargo test
       - name: Build WASM Brain
         run: |
           cd brain
@@ -47,6 +51,8 @@ jobs:
         run: mv android/app/src/main/assets/moon_phase_brain.wasm android/app/src/main/assets/moon-phase.wasm
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+      - name: Test against the freshly built Brain
+        run: ./gradlew testDebugUnitTest
       - name: Build with Gradle
         run: ./gradlew assembleDebug
       - name: Upload APK Artifact
