@@ -19,10 +19,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.json.JSONObject
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
+    private var wasmEngine: WasmEngine? = null
     private var currentPhaseName: String? = null
+
+    // True between onStart and onStop. The screen recalculates while it is
+    // true, so returning to the app never shows a reading from an earlier visit.
+    private var inForeground by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +36,7 @@ class MainActivity : ComponentActivity() {
         // Ensure background periodic sync is armed (runs 4x daily to keep app icon fresh)
         LunarSyncWorker.schedule(applicationContext)
         
-        val wasmEngine = try {
+        wasmEngine = try {
             WasmEngine(assets.open("moon-phase.wasm"))
         } catch (e: Exception) {
             null
@@ -42,7 +48,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF0D0D0D)
                 ) {
-                    MoonPhaseScreen(wasmEngine) { phase ->
+                    MoonPhaseScreen(wasmEngine, inForeground) { phase ->
                         currentPhaseName = phase
                     }
                 }
@@ -50,38 +56,66 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        inForeground = true
+    }
+
     override fun onStop() {
         super.onStop()
+        inForeground = false
         // Update the app icon only when the user leaves the app to prevent the system
         // from killing the process while the app is in the foreground.
-        currentPhaseName?.let { phase ->
-            LunarIconManager.updateIcon(this, phase)
-        }
+        // Ask the brain again rather than trusting what the screen last showed.
+        val phase = wasmEngine?.let { engine ->
+            try {
+                readMoon(engine).phaseNameOrNull()
+            } catch (e: Exception) {
+                null
+            }
+        } ?: currentPhaseName
+        phase?.let { LunarIconManager.updateIcon(this, it) }
     }
 }
 
+private const val REFRESH_INTERVAL_MS = 60_000L
+
+/** Asks the brain for the moon as of right now. */
+private fun readMoon(engine: WasmEngine): JSONObject {
+    val now = System.currentTimeMillis() / 1000.0
+    return JSONObject(engine.calculatePhase(now))
+}
+
+private fun JSONObject.phaseNameOrNull(): String? =
+    optString("phase_name").takeIf { it.isNotEmpty() }
+
 @Composable
-fun MoonPhaseScreen(engine: WasmEngine?, onPhaseCalculated: (String) -> Unit) {
+fun MoonPhaseScreen(engine: WasmEngine?, isVisible: Boolean, onPhaseCalculated: (String) -> Unit) {
     var moonData by remember { mutableStateOf<JSONObject?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
+    // Restarts every time the app comes back to the foreground and is
+    // cancelled when it leaves, so nothing ticks in the background.
+    LaunchedEffect(isVisible) {
+        if (!isVisible) return@LaunchedEffect
         if (engine == null) {
             error = "WASM Brain not found in assets!"
             return@LaunchedEffect
         }
-        try {
-            val now = System.currentTimeMillis() / 1000.0
-            val result = engine.calculatePhase(now)
-            val data = JSONObject(result)
-            moonData = data
-            
-            // Notify the activity of the current phase
-            data.optString("phase_name")?.let { phase ->
-                onPhaseCalculated(phase)
+        while (true) {
+            try {
+                val data = readMoon(engine)
+                moonData = data
+                error = null
+
+                // Notify the activity of the current phase
+                data.phaseNameOrNull()?.let { phase ->
+                    onPhaseCalculated(phase)
+                }
+            } catch (e: Exception) {
+                error = e.message ?: e.toString()
             }
-        } catch (e: Exception) {
-            error = e.message
+            delay(REFRESH_INTERVAL_MS)
         }
     }
 
