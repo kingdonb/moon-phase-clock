@@ -20,9 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Brain Test Suite**: `cargo test` covers the cosine approximation, illumination, phase windows, number formatting, the JSON contract and the exported entry point.
 - **Tests in CI**: CI now runs the Rust tests, and runs the Android unit tests against the brain it has just built.
+- **Release Script**: `scripts/release.sh` and `RELEASING.md` take a release from preflight checks through tests, signing, signature verification and a device check, and ask before tagging. Signing secrets are passed only through the environment and never leave the laptop.
+- **Dependabot**: Monthly grouped update pull requests for Gradle, GitHub Actions and Cargo.
+- **Minified Release Build in CI**: CI also builds the R8-minified release, so missing keep rules fail the build rather than the app.
+- **Session Logs**: `docs/sessions/` records what each working session changed and decided; `CLAUDE.md` points new sessions at it.
 - **Documented Status**: The README roadmap and the architecture blueprint now mark what is built and what is still TODO, describe the brain's real interface, and explain what latitude/longitude would (and would not) change.
 
 ### Removed
+- **Committed Release Bundle**: `android/app/release/app-release.aab` is no longer tracked; signed builds go to the ignored `dist/` directory.
 - **Duplicate WASM Binary**: The copy of `moon-phase.wasm` under test resources is gone; unit tests load the binary from `src/main/assets`, the one that ships.
 
 ## [0.0.7] - 2026-08-15

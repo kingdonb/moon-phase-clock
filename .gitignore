@@ -9,3 +9,7 @@ brain/.venv/
 brain/__pycache__/
 brain/moon-phase-py.wasm
 brain/target/
+.DS_Store
+dist/
+# Signed bundles are release artifacts, not source; scripts/release.sh writes them to dist/
+android/app/release/
