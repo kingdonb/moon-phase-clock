@@ -22,7 +22,7 @@ DRY_RUN=0
 cd "$(git rev-parse --show-toplevel)"
 step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 die()  { printf '\033[31mrelease: %s\033[0m\n' "$*" >&2; exit 1; }
-ask()  { local a; read -r -p "$1 [y/N] " a </dev/tty; [[ "$a" == [yY]* ]]; }
+ask()  { local a=""; read -r -p "$1 [y/N] " a </dev/tty 2>/dev/null || true; [[ "$a" == [yY]* ]]; }
 
 GRADLE_FILE=android/app/build.gradle.kts
 VERSION=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' "$GRADLE_FILE")
@@ -62,6 +62,32 @@ if (( DRY_RUN )); then
   exit 0
 fi
 
+DIST="dist/$VERSION"
+HEAD_SHA=$(git rev-parse HEAD)
+BUILD_TOOLS=$(ls -d "${ANDROID_HOME:-$HOME/Library/Android/sdk}"/build-tools/* | sort -V | tail -1)
+
+# Checks a signed APK/AAB pair: upload certificate and version.
+verify_signed() {
+  local aab=$1 apk=$2 aab_cert apk_cert badging
+  aab_cert=$(keytool -printcert -jarfile "$aab" | sed -n 's/^[[:space:]]*SHA256: //p' | head -1)
+  [[ "$aab_cert" == "$EXPECTED_CERT_SHA256" ]] || die "bundle signed with an unexpected certificate: $aab_cert"
+  "$BUILD_TOOLS/apksigner" verify "$apk" || die "apksigner rejected $apk"
+  apk_cert=$("$BUILD_TOOLS/apksigner" verify --print-certs "$apk" | sed -n 's/.*SHA-256 digest: //p' | head -1 | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//')
+  [[ "$apk_cert" == "$EXPECTED_CERT_SHA256" ]] || die "APK signed with an unexpected certificate: $apk_cert"
+  badging=$("$BUILD_TOOLS/aapt2" dump badging "$apk" | head -1)
+  grep -q "versionCode='$CODE'" <<<"$badging" && grep -q "versionName='$VERSION'" <<<"$badging" \
+    || die "APK version does not match: $badging"
+  echo "ok: upload certificate, APK signature, version $VERSION ($CODE)"
+}
+
+# A signed build of this exact commit already in dist/ is reused, so stopping
+# at the device check (or the tag) never means unlocking the key again.
+if [[ -f "$DIST/COMMIT" && "$(cat "$DIST/COMMIT")" == "$HEAD_SHA" ]] \
+   && (cd "$DIST" && shasum -a 256 -c --status SHA256SUMS); then
+  step "Reusing the signed build of $(git rev-parse --short HEAD) in $DIST"
+  verify_signed "$DIST/moon-oracle-$VERSION.aab" "$DIST/moon-oracle-$VERSION.apk"
+else
+
 step "Signing"
 MOON_KEYSTORE="${MOON_KEYSTORE:-$HOME/Documents/UrmanacAndroidDeveloper.jks}"
 [[ -f "$MOON_KEYSTORE" ]] || die "keystore not found: $MOON_KEYSTORE"
@@ -86,42 +112,48 @@ APK=android/app/build/outputs/apk/release/app-release.apk
 [[ -f "$AAB" && -f "$APK" ]] || die "signed outputs missing (is the passphrase right?)"
 
 step "Verify signatures"
-BUILD_TOOLS=$(ls -d "${ANDROID_HOME:-$HOME/Library/Android/sdk}"/build-tools/* | sort -V | tail -1)
-AAB_CERT=$(keytool -printcert -jarfile "$AAB" | sed -n 's/^[[:space:]]*SHA256: //p' | head -1)
-[[ "$AAB_CERT" == "$EXPECTED_CERT_SHA256" ]] || die "bundle signed with an unexpected certificate: $AAB_CERT"
-"$BUILD_TOOLS/apksigner" verify "$APK" || die "apksigner rejected $APK"
-APK_CERT=$("$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | sed -n 's/.*SHA-256 digest: //p' | head -1 | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//')
-[[ "$APK_CERT" == "$EXPECTED_CERT_SHA256" ]] || die "APK signed with an unexpected certificate: $APK_CERT"
-BADGING=$("$BUILD_TOOLS/aapt2" dump badging "$APK" | head -1)
-grep -q "versionCode='$CODE'" <<<"$BADGING" && grep -q "versionName='$VERSION'" <<<"$BADGING" \
-  || die "APK version does not match: $BADGING"
-echo "ok: upload certificate, APK signature, version $VERSION ($CODE)"
+verify_signed "$AAB" "$APK"
 
-DIST="dist/$VERSION"
+rm -rf "$DIST"
 mkdir -p "$DIST"
 cp "$AAB" "$DIST/moon-oracle-$VERSION.aab"
 cp "$APK" "$DIST/moon-oracle-$VERSION.apk"
 (cd "$DIST" && shasum -a 256 moon-oracle-* > SHA256SUMS)
+echo "$HEAD_SHA" > "$DIST/COMMIT"
+fi
 echo "Signed artifacts in $DIST:"; cat "$DIST/SHA256SUMS"
 
 step "Device check (human)"
 ADB="${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb"
 if "$ADB" get-state >/dev/null 2>&1; then
-  if ask "Install the signed release APK on $("$ADB" shell getprop ro.product.model | tr -d '\r') and launch it?"; then
+  if ask "Install the signed release APK on $("$ADB" shell getprop ro.product.model | tr -d '\r') and check it?"; then
     "$ADB" install -r "$DIST/moon-oracle-$VERSION.apk" \
-      || echo "Install failed. A Play-installed copy is signed by Google's app signing key; uninstall it first to test this build."
-    "$ADB" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
-    sleep 5
-    if "$ADB" shell pidof "$PACKAGE" >/dev/null; then echo "ok: $PACKAGE is running"; else echo "WARNING: $PACKAGE is not running; check: $ADB logcat -b crash -d"; fi
+      || die "install failed. A Play-installed copy is signed by Google's app signing key; uninstall it first, then re-run (the signed build is reused)."
+    "$ADB" logcat -c
+    # Launch the activity itself; monkey does not reliably bring it to the front.
+    "$ADB" shell am start -W -n "$PACKAGE/.MainActivity" >/dev/null
+    sleep 6
+    "$ADB" shell dumpsys activity activities | grep -q "topResumedActivity=.*$PACKAGE/.MainActivity" \
+      && echo "ok: app is in the foreground" || echo "WARNING: app is not in the foreground"
+    "$ADB" logcat -d 'MoonPhase:*' '*:S' | grep -v '^-' || true
+    # Leaving the app triggers the icon swap
+    "$ADB" shell input keyevent KEYCODE_HOME
+    sleep 4
+    echo "Launcher icon now: $("$ADB" shell cmd package query-activities --components -a android.intent.action.MAIN -c android.intent.category.LAUNCHER | grep "$PACKAGE" | tr -d '\r')"
+    if "$ADB" shell pidof "$PACKAGE" >/dev/null && [[ -z "$("$ADB" logcat -b crash -d)" ]]; then
+      echo "ok: still running, no crashes"
+    else
+      echo "WARNING: $PACKAGE crashed or stopped; check: $ADB logcat -b crash -d"
+    fi
   fi
 else
   echo "No device attached. Install $DIST/moon-oracle-$VERSION.apk on a device and confirm it starts before uploading."
 fi
-ask "Has the release build been checked on a device?" || die "stopping before the tag. Re-run once it has been checked."
+ask "Has the release build been checked on a device?" || die "stopping before the tag. Re-run once it has been checked; the signed build in $DIST is reused."
 
 step "Tag (human)"
 if ask "Create and push tag $VERSION at $(git rev-parse --short HEAD)? CI will publish the GitHub release."; then
-  git tag -a "$VERSION" -m "Moon Oracle $VERSION"
+  git tag -a "$VERSION" -m "Moon Oracle $VERSION" "$HEAD_SHA"
   git push origin "$VERSION"
   echo "Tagged. Watch CI: gh run watch"
 else
