@@ -5,10 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.10] - 2026-11-17
 
 ### Fixed
+- **App Closing on First Launch**: On a fresh install the background sync ran at once and swapped the launcher icon while the app was open. That disabled the icon the app had been opened from, and Android closed the app a few seconds after it appeared. The sync now leaves the swap until the user leaves the app, as the app itself already did. It applies to the 6-hourly sync too (#24).
+- **Release Device Check**: `scripts/release.sh` now opens the app through its launcher icon, the way users do, waits out the first background sync, and offers a fresh install when a Play-installed copy blocks the upload-signed build. Its closing instructions name the track you ship to, and mention Play's 500-character limit on release notes.
 - **Release Script Prompts**: The yes/no prompts in `scripts/release.sh` were invisible. They printed on the error stream, which the script silenced, so the 0.0.9 run looked stuck at the device check while it was waiting for an answer. Prompts now print directly on the terminal.
+
+### Changed
+- **Build Updates**: Kotlin Compose compiler plugin 2.4.10 → 2.4.21, foojay toolchain resolver 0.10.0 → 1.0.0, and `actions/setup-java` 5 → 6 in CI. Build tooling only; the app is unchanged.
+- **Single Sync Scheduler**: Background sync is scheduled only at process start, not again by the screen. Behaviour is unchanged.
 
 ## [0.0.9] - 2026-11-17
 
