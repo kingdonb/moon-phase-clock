@@ -80,7 +80,7 @@ android {
 dependencies {
     // Chicory: Pure Java WebAssembly Interpreter
     // This allows us to run WASM on Android without native .so files.
-    implementation("com.dylibso.chicory:runtime:1.0.0-M2")
+    implementation("com.dylibso.chicory:runtime:1.7.5")
     implementation("com.dylibso.chicory:wasi:1.0.0-M2")
     
     // Testing
