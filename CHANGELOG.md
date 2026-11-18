@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Release Script Prompts**: The yes/no prompts in `scripts/release.sh` were invisible. They printed on the error stream, which the script silenced, so the 0.0.9 run looked stuck at the device check while it was waiting for an answer. Prompts now print directly on the terminal.
+
 ## [0.0.9] - 2026-11-17
 
 ### Changed
