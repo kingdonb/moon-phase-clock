@@ -44,7 +44,15 @@ if (( ! DRY_RUN )); then
   git fetch -q origin main
   [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] || die "main is not in sync with origin/main"
 fi
-echo "ok: version, changelog, tag, branch"
+# Google Play only accepts releases targeting a recent API level (roughly
+# within a year of the newest Android). Proxy: the newest stable platform in the
+# local SDK, minus one. Install new platforms via Android Studio's SDK Manager.
+TARGET_SDK=$(sed -n 's/^ *targetSdk = \([0-9]*\)/\1/p' "$GRADLE_FILE")
+NEWEST_PLATFORM=$(ls "${ANDROID_HOME:-$HOME/Library/Android/sdk}/platforms" | sed -n 's/^android-\([0-9]*\)\(\.[0-9]*\)\{0,1\}$/\1/p' | sort -n | tail -1)
+if [[ -n "$NEWEST_PLATFORM" ]] && (( TARGET_SDK < NEWEST_PLATFORM - 1 )); then
+  die "targetSdk $TARGET_SDK is likely too old for Google Play (newest installed platform is $NEWEST_PLATFORM); raise it to at least $((NEWEST_PLATFORM - 1))"
+fi
+echo "ok: version, changelog, tag, branch, targetSdk $TARGET_SDK"
 
 step "Brain: test and rebuild"
 (cd brain && cargo test --quiet && cargo build --quiet --target wasm32-wasip1 --release)

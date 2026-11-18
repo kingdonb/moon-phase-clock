@@ -7,14 +7,14 @@ plugins {
 
 android {
     namespace = "com.urmanac.moonphase"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.urmanac.moonphase"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 8
-        versionName = "0.0.8"
+        targetSdk = 36
+        versionCode = 9
+        versionName = "0.0.9"
     }
 
     // Release signing is configured only when scripts/release.sh provides the

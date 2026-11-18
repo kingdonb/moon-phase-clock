@@ -20,7 +20,7 @@ scripts/release.sh
 
 The script:
 
-1. **Preflight.** On `main`, clean, in sync with `origin`; the version, versionCode and changelog agree; the tag doesn't exist yet.
+1. **Preflight.** On `main`, clean, in sync with `origin`; the version, versionCode and changelog agree; the tag doesn't exist yet. `targetSdk` must be no more than one below the newest Android platform installed in the SDK, because Play rejects releases that target an old API level (0.0.8 was rejected for targeting 35). Keep the SDK current through Android Studio's SDK Manager so the check stays meaningful.
 2. **Tests.** Runs the brain's Rust tests and rebuilds it. Fails if the committed `moon-phase.wasm` is not what the source builds. Runs the Android unit tests.
 3. **Signs** (human: passphrase). Reads it with `op read "$MOON_KEYSTORE_PASS_OP"` if that is set and 1Password is reachable, otherwise prompts. It reaches Gradle only through environment variables, never a file.
 4. **Verifies.** The bundle and APK must be signed with the Play upload certificate (fingerprint pinned in the script) and carry the right version. Writes `dist/x.y.z/` with the `.aab`, `.apk` and `SHA256SUMS`.
