@@ -55,6 +55,9 @@ jobs:
         run: ./gradlew testDebugUnitTest
       - name: Build with Gradle
         run: ./gradlew assembleDebug
+      # Unsigned, but minified with R8: catches missing keep rules at build time
+      - name: Build minified release
+        run: ./gradlew assembleRelease
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v7
         with:

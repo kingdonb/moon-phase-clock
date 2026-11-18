@@ -1,0 +1,21 @@
+# Monthly update PRs, so each visit starts with the upgrades already proposed
+# and tested by CI instead of a manual version hunt.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      androidx:
+        patterns: ["androidx.*"]
+      build-toolchain:
+        patterns: ["com.android.*", "org.jetbrains.kotlin*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: cargo
+    directory: /brain
+    schedule:
+      interval: monthly

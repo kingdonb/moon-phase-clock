@@ -17,8 +17,27 @@ android {
         versionName = "0.0.8"
     }
 
+    // Release signing is configured only when scripts/release.sh provides the
+    // keystore through the environment. Nothing secret is stored in the repo
+    // or in Gradle properties; without these variables the release build is
+    // simply unsigned.
+    val releaseKeystore = System.getenv("MOON_SIGNING_STORE_FILE")
+    if (releaseKeystore != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("MOON_SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("MOON_SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("MOON_SIGNING_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
