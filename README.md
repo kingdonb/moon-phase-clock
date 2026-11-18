@@ -22,7 +22,7 @@ If a bug is found in the lunar calculation, it is fixed in exactly one place: th
 
 - [Rust](https://rustup.rs/) with `wasm32-wasip1` target.
 - [Android Studio](https://developer.android.com/studio) (Koala or newer).
-- JDK 17+.
+- JDK 21 (Gradle downloads it automatically if missing).
 
 ### Building the Brain
 
