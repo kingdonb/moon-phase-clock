@@ -11,6 +11,15 @@ import android.util.Log
  */
 object LunarIconManager {
 
+    /**
+     * True while MainActivity is on screen. Disabling the launcher alias the
+     * visible task was started from makes Android close that task, even with
+     * DONT_KILL_APP, so the icon must only change while the app is in the
+     * background. MainActivity.onStop applies any pending change on leaving.
+     */
+    @Volatile
+    var appInForeground = false
+
     private val phaseToAlias = mapOf(
         "Full Moon" to ".MainActivityFull",
         "Waxing Crescent" to ".MainActivityWaxingCrescent",
