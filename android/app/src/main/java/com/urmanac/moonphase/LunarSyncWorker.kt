@@ -23,6 +23,10 @@ class LunarSyncWorker(
 
     override suspend fun doWork(): Result {
         Log.d("MoonPhase", "LunarSyncWorker executing background moon phase calculation...")
+        // The calculation is local and deterministic: it reads a bundled asset
+        // and the clock, nothing else. A failure here will not heal on an
+        // immediate retry, so report it and let the next scheduled run try again
+        // instead of asking WorkManager to back off and retry.
         return try {
             val wasmEngine = WasmEngine(applicationContext.assets.open("moon-phase.wasm"))
             val now = System.currentTimeMillis() / 1000.0
@@ -30,17 +34,17 @@ class LunarSyncWorker(
             val data = JSONObject(result)
             val phaseName = data.optString("phase_name")
 
-            if (!phaseName.isNullOrEmpty()) {
+            if (phaseName.isNotEmpty()) {
                 Log.d("MoonPhase", "LunarSyncWorker calculated phase: $phaseName")
                 LunarIconManager.updateIcon(applicationContext, phaseName)
                 Result.success()
             } else {
                 Log.w("MoonPhase", "LunarSyncWorker: Empty phase name returned from WASM")
-                Result.retry()
+                Result.failure()
             }
         } catch (e: Exception) {
             Log.e("MoonPhase", "LunarSyncWorker failed", e)
-            Result.retry()
+            Result.failure()
         }
     }
 

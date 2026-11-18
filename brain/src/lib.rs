@@ -273,6 +273,29 @@ mod tests {
     }
 
     #[test]
+    fn position_resolves_far_finer_than_a_tenth_of_a_cycle() {
+        // The position within the cycle is a full f64 and is never rounded
+        // before it picks the phase or the illumination.
+        let start = at_position(0.2);
+        let one_minute_of_cycle = 60.0 / SYNODIC_MONTH_SECONDS;
+        let moved = cycle_position(start + 60.0) - cycle_position(start);
+        assert!((moved - one_minute_of_cycle).abs() < 1e-9);
+
+        // A phase boundary is honoured to within a minute either side...
+        let boundary = at_position(0.22);
+        assert!(json_at(boundary - 60.0).contains("Waxing Crescent"));
+        assert!(json_at(boundary + 60.0).contains("First Quarter"));
+
+        // ...and the reported illumination moves from one hour to the next.
+        let mut previous = json_at(start);
+        for hour in 1..=24 {
+            let current = json_at(start + hour as f64 * 3600.0);
+            assert_ne!(current, previous, "no change during hour {hour}");
+            previous = current;
+        }
+    }
+
+    #[test]
     fn fixed_point_formatting_rounds_and_pads() {
         assert_eq!(fixed(0.0, 4), "0.0000");
         assert_eq!(fixed(0.04, 4), "0.0400");
