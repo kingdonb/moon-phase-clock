@@ -32,10 +32,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Ensure background periodic sync is armed (runs 4x daily to keep app icon fresh)
-        LunarSyncWorker.schedule(applicationContext)
-        
+        // Background sync is armed by MoonPhaseApplication on process start.
+
         wasmEngine = try {
             WasmEngine(assets.open("moon-phase.wasm"))
         } catch (e: Exception) {
@@ -59,11 +57,13 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         inForeground = true
+        LunarIconManager.appInForeground = true
     }
 
     override fun onStop() {
         super.onStop()
         inForeground = false
+        LunarIconManager.appInForeground = false
         // Update the app icon only when the user leaves the app to prevent the system
         // from killing the process while the app is in the foreground.
         // Ask the brain again rather than trusting what the screen last showed.

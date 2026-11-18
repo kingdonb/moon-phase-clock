@@ -143,14 +143,25 @@ step "Device check (human)"
 ADB="${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb"
 if "$ADB" get-state >/dev/null 2>&1; then
   if ask "Install the signed release APK on $("$ADB" shell getprop ro.product.model | tr -d '\r') and check it?"; then
-    "$ADB" install -r "$DIST/moon-oracle-$VERSION.apk" \
-      || die "install failed. A Play-installed copy is signed by Google's app signing key; uninstall it first, then re-run (the signed build is reused)."
+    if ! "$ADB" install -r "$DIST/moon-oracle-$VERSION.apk"; then
+      # A Play-installed copy is signed by Google's app signing key, so this
+      # build cannot replace it. A fresh install is also the best test: it
+      # starts from the default icon, like a new user.
+      ask "Install failed (likely the Play copy, signed by Google). Uninstall $PACKAGE and install fresh?" \
+        || die "stopping before the tag. Re-run once it can be installed; the signed build in $DIST is reused."
+      "$ADB" uninstall "$PACKAGE" >/dev/null || true
+      "$ADB" install "$DIST/moon-oracle-$VERSION.apk" || die "fresh install failed"
+    fi
     "$ADB" logcat -c
-    # Launch the activity itself; monkey does not reliably bring it to the front.
-    "$ADB" shell am start -W -n "$PACKAGE/.MainActivity" >/dev/null
-    sleep 6
-    "$ADB" shell dumpsys activity activities | grep -q "topResumedActivity=.*$PACKAGE/.MainActivity" \
-      && echo "ok: app is in the foreground" || echo "WARNING: app is not in the foreground"
+    # Open it the way the launcher does: through whichever icon alias is
+    # enabled. Swapping that alias while the app is open closes it (#24).
+    ICON=$("$ADB" shell cmd package query-activities --components -a android.intent.action.MAIN -c android.intent.category.LAUNCHER | grep "$PACKAGE" | tr -d '\r ' | head -1)
+    echo "Opening through $ICON"
+    "$ADB" shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$ICON" >/dev/null
+    # Long enough for WorkManager's immediate first run on a fresh install
+    sleep 10
+    "$ADB" shell dumpsys activity activities | grep -q "topResumedActivity=.*$PACKAGE/" \
+      && echo "ok: app is still in the foreground" || echo "WARNING: app is not in the foreground (closed itself? see #24)"
     "$ADB" logcat -d 'MoonPhase:*' '*:S' | grep -v '^-' || true
     # Leaving the app triggers the icon swap
     "$ADB" shell input keyevent KEYCODE_HOME
@@ -179,6 +190,8 @@ fi
 cat <<NEXT
 
 Remaining manual step: upload $DIST/moon-oracle-$VERSION.aab to Play Console
-(Moon Oracle > Test and release > Production > Create new release),
-paste the $VERSION section of CHANGELOG.md as release notes, and roll out.
+(Moon Oracle > Test and release > the track you ship to, e.g. Internal testing > Create new release),
+with release notes of at most 500 characters per language (summarise the $VERSION
+section of CHANGELOG.md; past notes end "AAB from main branch at <sha> <release link>"),
+and roll out.
 NEXT

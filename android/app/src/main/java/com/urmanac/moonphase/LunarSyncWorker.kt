@@ -36,7 +36,13 @@ class LunarSyncWorker(
 
             if (phaseName.isNotEmpty()) {
                 Log.d("MoonPhase", "LunarSyncWorker calculated phase: $phaseName")
-                LunarIconManager.updateIcon(applicationContext, phaseName)
+                if (LunarIconManager.appInForeground) {
+                    // Swapping now would close the app (see LunarIconManager).
+                    // MainActivity.onStop swaps it when the user leaves.
+                    Log.d("MoonPhase", "LunarSyncWorker: app is in the foreground; leaving the icon swap to onStop")
+                } else {
+                    LunarIconManager.updateIcon(applicationContext, phaseName)
+                }
                 Result.success()
             } else {
                 Log.w("MoonPhase", "LunarSyncWorker: Empty phase name returned from WASM")
