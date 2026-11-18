@@ -29,6 +29,7 @@ The script:
 **Stopping is cheap.** `dist/x.y.z/COMMIT` records which commit was signed. Re-running the script on that same commit re-verifies and reuses the signed build instead of asking for the passphrase again. So answer "No" freely, check the phone, and run it again.
 6. **Tag** (human). Asks before creating and pushing the annotated tag. CI then publishes the GitHub release, with the changelog section as notes.
 7. **Play Console** (human, manual). Upload `dist/x.y.z/moon-oracle-x.y.z.aab`.
+8. **Check what Play actually installs.** A new internal-testing release can take a while to reach testers, and until then the Play Store installs the previous version. Before judging a fix from a Play install, confirm the version: *Settings → Apps → Moon Phase → App details*, or `adb shell dumpsys package com.urmanac.moonphase | grep versionName`.
 
 ## Signing details
 
