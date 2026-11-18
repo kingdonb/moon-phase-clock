@@ -22,7 +22,15 @@ DRY_RUN=0
 cd "$(git rev-parse --show-toplevel)"
 step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 die()  { printf '\033[31mrelease: %s\033[0m\n' "$*" >&2; exit 1; }
-ask()  { local a=""; read -r -p "$1 [y/N] " a </dev/tty 2>/dev/null || true; [[ "$a" == [yY]* ]]; }
+# Prompts on the terminal itself; with no terminal, the answer is "no".
+ask() {
+  local a=""
+  { exec 3<>/dev/tty; } 2>/dev/null || return 1
+  printf '%s [y/N] ' "$1" >&3
+  read -r a <&3 || true
+  exec 3>&-
+  [[ "$a" == [yY]* ]]
+}
 
 GRADLE_FILE=android/app/build.gradle.kts
 VERSION=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' "$GRADLE_FILE")
