@@ -9,6 +9,9 @@ updates:
     groups:
       androidx:
         patterns: ["androidx.*"]
+      # runtime and wasi must move together; the API changed after 1.0.0-M2 (see #6)
+      chicory:
+        patterns: ["com.dylibso.chicory:*"]
       build-toolchain:
         patterns: ["com.android.*", "org.jetbrains.kotlin*"]
   - package-ecosystem: github-actions

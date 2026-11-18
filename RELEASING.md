@@ -24,7 +24,9 @@ The script:
 2. **Tests.** Runs the brain's Rust tests and rebuilds it. Fails if the committed `moon-phase.wasm` is not what the source builds. Runs the Android unit tests.
 3. **Signs** (human: passphrase). Reads it with `op read "$MOON_KEYSTORE_PASS_OP"` if that is set and 1Password is reachable, otherwise prompts. It reaches Gradle only through environment variables, never a file.
 4. **Verifies.** The bundle and APK must be signed with the Play upload certificate (fingerprint pinned in the script) and carry the right version. Writes `dist/x.y.z/` with the `.aab`, `.apk` and `SHA256SUMS`.
-5. **Device check** (human). If a phone is attached over adb, offers to install and launch the signed APK and checks the process survives. Either way, asks you to confirm before going on. The 0.0.7 crash only showed up in minified release builds, which is why this step exists.
+5. **Device check** (human). If a phone is attached over adb (USB or wireless), offers to install the signed APK. It then launches the app, sends the phone Home to trigger the icon swap, reports which launcher icon is active, and checks for crashes. Either way, it asks you to confirm before going on. The 0.0.7 crash only showed up in minified release builds, which is why this step exists.
+
+**Stopping is cheap.** `dist/x.y.z/COMMIT` records which commit was signed. Re-running the script on that same commit re-verifies and reuses the signed build instead of asking for the passphrase again. So answer "No" freely, check the phone, and run it again.
 6. **Tag** (human). Asks before creating and pushing the annotated tag. CI then publishes the GitHub release, with the changelog section as notes.
 7. **Play Console** (human, manual). Upload `dist/x.y.z/moon-oracle-x.y.z.aab`.
 
