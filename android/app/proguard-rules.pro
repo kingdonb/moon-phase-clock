@@ -14,9 +14,8 @@
 -keep class * extends androidx.work.ListenableWorker { *; }
 
 # Suppress warnings about missing compile-only annotations and logging dependencies in Chicory
--dontwarn com.dylibso.chicory.experimental.hostmodule.annotations.Buffer
--dontwarn com.dylibso.chicory.experimental.hostmodule.annotations.HostModule
--dontwarn com.dylibso.chicory.experimental.hostmodule.annotations.WasmExport
+# (Chicory 1.x moved these from com.dylibso.chicory.experimental.hostmodule.annotations)
+-dontwarn com.dylibso.chicory.annotations.**
 -dontwarn com.google.errorprone.annotations.FormatMethod
 -dontwarn java.lang.System$Logger$Level
 -dontwarn java.lang.System$Logger
