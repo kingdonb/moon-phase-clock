@@ -6,13 +6,11 @@ import org.junit.Test
 
 class WasmEngineTest {
 
-    // Mirrors the constants in brain/src/lib.rs, only to pick test instants.
-    private val knownNewMoon = 947182440.0
-    private val synodicMonthSeconds = 29.53058770576 * 24 * 60 * 60
-
-    /** A timestamp at the given fraction of a lunation (0.0 = New, 0.5 = Full). */
-    private fun atCyclePosition(position: Double) =
-        knownNewMoon + (300 + position) * synodicMonthSeconds
+    // Published 2026 instants (UTC), as UNIX timestamps
+    private val annularEclipseNewMoon = 1771329660.0 // 2026-02-17 12:01
+    private val totalLunarEclipseFullMoon = 1772537880.0 // 2026-03-03 11:38
+    private val betweenThem = 1771933770.0 // midway: about First Quarter
+    private val crescentDay = 1771675200.0 // 2026-02-21 12:00, four days after new
 
     // android.jar's org.json is a stub under local unit tests, so pull the
     // fields out of the brain's flat JSON directly.
@@ -33,48 +31,45 @@ class WasmEngineTest {
 
     @Test
     fun `test wasm engine loads and calculates full moon`() {
-        // We simulate passing a known Full Moon timestamp to the engine.
-        // Full Moon example: ~2025-01-13 22:27:00 UTC (1736807220.0)
+        // Full Moon: 2025-01-13 22:27:00 UTC
         val resultJson = newEngine().calculatePhase(1736807220.0)
 
         println("WASM Result: $resultJson")
 
-        // Assert the Torment Multiplier is Maxed out and it identified the Full Moon
         assertTrue("Expected Full Moon in JSON", resultJson.contains("\"phase_name\": \"Full Moon\""))
         assertTrue("Expected Torment Multiplier 3.0", resultJson.contains("\"torment_multiplier\": 3.0"))
-
-        val illumination = numberField(resultJson, "illumination")
-        assertTrue("Expected a nearly full disc, got $illumination", illumination > 0.98)
+        assertTrue("Expected a nearly full disc", numberField(resultJson, "illumination") > 0.999)
     }
 
     @Test
-    fun `illumination follows the cosine law with four decimals`() {
+    fun `eclipses are new and full to four decimals`() {
         val engine = newEngine()
-        val expected = mapOf(
-            0.125 to ("Waxing Crescent" to 0.1464),
-            0.25 to ("First Quarter" to 0.5000),
-            0.375 to ("Waxing Gibbous" to 0.8536),
-            0.5 to ("Full Moon" to 1.0000),
-            0.625 to ("Waning Gibbous" to 0.8536),
-            0.75 to ("Last Quarter" to 0.5000),
-            0.875 to ("Waning Crescent" to 0.1464),
-        )
-        for ((position, phaseAndIllumination) in expected) {
-            val (phase, illumination) = phaseAndIllumination
-            val data = engine.calculatePhase(atCyclePosition(position))
-            assertEquals("phase at $position", phase, stringField(data, "phase_name"))
-            assertEquals("illumination at $position", illumination, numberField(data, "illumination"), 0.00005)
-        }
+
+        val newMoon = engine.calculatePhase(annularEclipseNewMoon)
+        assertEquals("New Moon", stringField(newMoon, "phase_name"))
+        assertEquals(0.0, numberField(newMoon, "illumination"), 0.0001)
+
+        val fullMoon = engine.calculatePhase(totalLunarEclipseFullMoon)
+        assertEquals("Full Moon", stringField(fullMoon, "phase_name"))
+        assertEquals(1.0, numberField(fullMoon, "illumination"), 0.0001)
+    }
+
+    @Test
+    fun `midway between new and full is about first quarter`() {
+        val json = newEngine().calculatePhase(betweenThem)
+        assertEquals("First Quarter", stringField(json, "phase_name"))
+        assertEquals(0.5, numberField(json, "illumination"), 0.05)
+        assertTrue("four decimals: $json", Regex("\"illumination\": \\d\\.\\d{4}}").containsMatchIn(json))
     }
 
     @Test
     fun `repeated calls reuse the result buffer cleanly`() {
         val engine = newEngine()
         // Longest result first, then the shortest: no stale bytes may leak through.
-        engine.calculatePhase(atCyclePosition(0.1))
-        val data = engine.calculatePhase(atCyclePosition(0.0001))
+        assertEquals("Waxing Crescent", stringField(engine.calculatePhase(crescentDay), "phase_name"))
+        val data = engine.calculatePhase(annularEclipseNewMoon)
+        assertTrue("clean JSON: $data", data.endsWith("}"))
         assertEquals("New Moon", stringField(data, "phase_name"))
         assertEquals(1.0, numberField(data, "torment_multiplier"), 0.0)
-        assertEquals(0.0, numberField(data, "illumination"), 0.00005)
     }
 }

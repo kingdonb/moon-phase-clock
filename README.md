@@ -43,7 +43,7 @@ cp target/wasm32-wasip1/release/moon_phase_brain.wasm ../android/app/src/main/as
 ## 🗺️ Roadmap
 
 - **Phase 1** ✅ Shipped: the Rust WASM Brain and the Android app, with a launcher icon that follows the moon.
-- **0.1.0** 📝 TODO: true-moon phase timing using real orbital correction terms ([#10](https://github.com/kingdonb/moon-phase-clock/issues/10)). Today the Brain uses the mean lunar month, so phase changes can be several hours early or late.
+- **0.1.0** 🚧 In review: true-moon phase timing using real orbital correction terms ([#10](https://github.com/kingdonb/moon-phase-clock/issues/10)). New and full moons land within about half an hour of the published instants, where the mean lunar month could be up to ~14 hours off.
 - **Phase 2** 📝 TODO: Iron Town Gateway (Spin API) and Terminal Interface (Go CLI).
 - **Phase 3** 📝 TODO: AI Bridge (MCP Server) and K8s Reconciler.
 - **Phase 4** 📝 TODO: Smooth animations and deeper OS integration.

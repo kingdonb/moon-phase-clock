@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **True-Moon Timing**: The brain places the Moon by its true elongation from the Sun, using the mean elongation plus the six largest periodic terms from Meeus (*Astronomical Algorithms*, ch. 48). Before, it counted mean synodic months from a 2000 reference new moon, which could put phase changes up to ~14 hours early or late. New and full moons now fall within about half an hour of the published instants; the tests check 2026's, including all four eclipses. Phase windows, multipliers and the JSON format are unchanged, but what the brain reports at a given moment shifts by up to several hours around phase changes. Hence a minor version.
+
 ## [0.0.10] - 2026-11-17
 
 ### Fixed

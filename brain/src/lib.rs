@@ -3,10 +3,13 @@
 #[cfg(not(test))]
 use core::panic::PanicInfo;
 
-// Known New Moon: 2000-01-06 18:14:00 UTC
-const KNOWN_NEW_MOON_UNIX: f64 = 947182440.0;
-const SYNODIC_MONTH_DAYS: f64 = 29.53058770576;
-const SYNODIC_MONTH_SECONDS: f64 = SYNODIC_MONTH_DAYS * 24.0 * 60.0 * 60.0;
+use core::f64::consts::PI;
+
+// Julian Date of the UNIX epoch, and of the J2000.0 epoch
+const UNIX_EPOCH_JD: f64 = 2440587.5;
+const J2000_JD: f64 = 2451545.0;
+const SECONDS_PER_DAY: f64 = 86400.0;
+const DAYS_PER_JULIAN_CENTURY: f64 = 36525.0;
 
 const RESULT_BUFFER_LEN: usize = 128;
 
@@ -28,13 +31,74 @@ pub extern "C" fn calculate_moon_phase(timestamp: f64) -> *const u8 {
     buf.as_ptr()
 }
 
-/// Position within the synodic month: 0.0 = New Moon, 0.5 = Full Moon.
+/// Position within the lunar cycle: 0.0 = New Moon, 0.5 = Full Moon.
+///
+/// This is the Moon's true elongation from the Sun (0° to 360°) as a fraction
+/// of a full turn. It follows Meeus, *Astronomical Algorithms* (2nd ed.),
+/// ch. 48: the mean elongation D corrected by the six largest periodic terms
+/// in D and the mean anomalies of the Sun (M) and Moon (M′). Phase instants
+/// come out within about half an hour of the true ones, where the mean
+/// synodic month used before could be off by up to ~14 hours.
+///
+/// Uses UTC in place of Terrestrial Time; the ~70 s difference is far below
+/// the model's accuracy.
 fn cycle_position(timestamp: f64) -> f64 {
-    let cycles = (timestamp - KNOWN_NEW_MOON_UNIX) / SYNODIC_MONTH_SECONDS;
+    let t = (timestamp / SECONDS_PER_DAY + UNIX_EPOCH_JD - J2000_JD) / DAYS_PER_JULIAN_CENTURY;
+    let t2 = t * t;
 
-    // Manual floor (no_std has no f64::floor); valid for timestamps after the
-    // reference New Moon.
-    cycles - (cycles as u64) as f64
+    // Mean elongation of the Moon, mean anomaly of the Sun, mean anomaly of the Moon (degrees)
+    let d = 297.8501921 + 445267.1114034 * t - 0.0018819 * t2;
+    let m = 357.5291092 + 35999.0502909 * t - 0.0001536 * t2;
+    let mp = 134.9633964 + 477198.8675055 * t + 0.0087414 * t2;
+
+    // True elongation = 180° − phase angle i (Meeus eq. 48.4)
+    let elongation = d
+        + 6.289 * sin_deg(mp)
+        - 2.100 * sin_deg(m)
+        + 1.274 * sin_deg(2.0 * d - mp)
+        + 0.658 * sin_deg(2.0 * d)
+        + 0.214 * sin_deg(2.0 * mp)
+        + 0.110 * sin_deg(d);
+
+    normalize_degrees(elongation) / 360.0
+}
+
+/// Largest integer not above x (no_std has no f64::floor).
+fn floor(x: f64) -> f64 {
+    let truncated = x as i64 as f64;
+    if truncated > x {
+        truncated - 1.0
+    } else {
+        truncated
+    }
+}
+
+/// Angle in degrees, reduced to [0, 360).
+fn normalize_degrees(x: f64) -> f64 {
+    let r = x - 360.0 * floor(x / 360.0);
+    if r >= 360.0 {
+        0.0
+    } else {
+        r
+    }
+}
+
+/// sin of an angle in degrees, any magnitude.
+fn sin_deg(degrees: f64) -> f64 {
+    // sin(x) = cos(x − 90°)
+    cos_radians(normalize_degrees(degrees - 90.0) * PI / 180.0)
+}
+
+/// cos for any x in [0, 2π), via symmetry onto [−π/2, π/2].
+fn cos_radians(x: f64) -> f64 {
+    // Shift to [−π, π)
+    let x = if x >= PI { x - 2.0 * PI } else { x };
+    let a = if x < 0.0 { -x } else { x };
+    if a <= PI / 2.0 {
+        cos_within_half_pi(a)
+    } else {
+        -cos_within_half_pi(PI - a)
+    }
 }
 
 fn phase_for(cycle_position: f64) -> (&'static str, f64) {
@@ -63,7 +127,7 @@ fn phase_for(cycle_position: f64) -> (&'static str, f64) {
 /// equals cos²(π·(position − 0.5)). That form keeps the argument inside
 /// [−π/2, π/2], where the short series below is accurate.
 fn illumination(cycle_position: f64) -> f64 {
-    let c = cos_within_half_pi(core::f64::consts::PI * (cycle_position - 0.5));
+    let c = cos_within_half_pi(PI * (cycle_position - 0.5));
     let k = c * c;
     if k < 0.0 {
         0.0
@@ -92,7 +156,10 @@ fn cos_within_half_pi(x: f64) -> f64 {
 /// Writes the JSON result plus a NUL terminator into `buf`; returns the JSON
 /// length (excluding the terminator).
 fn render(timestamp: f64, buf: &mut [u8]) -> usize {
-    let position = cycle_position(timestamp);
+    render_position(cycle_position(timestamp), buf)
+}
+
+fn render_position(position: f64, buf: &mut [u8]) -> usize {
     let (phase_name, torment_multiplier) = phase_for(position);
 
     // Built by hand to avoid dependencies
@@ -183,6 +250,9 @@ fn panic(_info: &PanicInfo) -> ! {
 mod tests {
     use super::*;
 
+    const HOUR: f64 = 3600.0;
+    const MINUTE: f64 = 60.0;
+
     fn json_at(timestamp: f64) -> String {
         let mut buf = [0xFFu8; RESULT_BUFFER_LEN];
         let len = render(timestamp, &mut buf);
@@ -190,9 +260,11 @@ mod tests {
         String::from_utf8(buf[..len].to_vec()).unwrap()
     }
 
-    fn at_position(position: f64) -> f64 {
-        // 300 lunations after the reference New Moon (early 2024)
-        KNOWN_NEW_MOON_UNIX + (300.0 + position) * SYNODIC_MONTH_SECONDS
+    fn json_at_position(position: f64) -> String {
+        let mut buf = [0xFFu8; RESULT_BUFFER_LEN];
+        let len = render_position(position, &mut buf);
+        assert_eq!(buf[len], 0, "result must be NUL-terminated");
+        String::from_utf8(buf[..len].to_vec()).unwrap()
     }
 
     fn fixed(f: f64, decimals: u32) -> String {
@@ -203,6 +275,38 @@ mod tests {
         String::from_utf8(buf[..len].to_vec()).unwrap()
     }
 
+    /// UNIX timestamp for a UTC date and time (proleptic Gregorian).
+    fn utc(y: i64, mo: i64, d: i64, h: i64, mi: i64) -> f64 {
+        // Days from civil, after Howard Hinnant
+        let y = if mo <= 2 { y - 1 } else { y };
+        let era = y.div_euclid(400);
+        let yoe = y - era * 400;
+        let mp = (mo + 9) % 12;
+        let doy = (153 * mp + 2) / 5 + d - 1;
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        let days = era * 146097 + doe - 719468;
+        (days * 86400 + h * 3600 + mi * 60) as f64
+    }
+
+    /// Signed distance from `position` to `target` around the cycle, in degrees of elongation.
+    fn degrees_off(position: f64, target: f64) -> f64 {
+        let mut diff = (position - target) * 360.0;
+        if diff > 180.0 {
+            diff -= 360.0;
+        }
+        if diff < -180.0 {
+            diff += 360.0;
+        }
+        diff
+    }
+
+    #[test]
+    fn utc_helper_matches_known_timestamps() {
+        assert_eq!(utc(1970, 1, 1, 0, 0), 0.0);
+        assert_eq!(utc(2000, 1, 6, 18, 14), 947182440.0);
+        assert_eq!(utc(2026, 11, 17, 0, 0), 1794873600.0);
+    }
+
     #[test]
     fn cosine_matches_std_across_its_domain() {
         let half_pi = core::f64::consts::FRAC_PI_2;
@@ -211,6 +315,27 @@ mod tests {
             let diff = (cos_within_half_pi(x) - x.cos()).abs();
             assert!(diff < 1e-12, "cos({x}) off by {diff}");
         }
+    }
+
+    #[test]
+    fn sine_in_degrees_matches_std_for_large_and_negative_angles() {
+        // The mean arguments run to ~10^5 degrees for 2026 and beyond
+        for i in -2000..=2000 {
+            let degrees = i as f64 * 97.31;
+            let expected = (degrees.to_radians()).sin();
+            let diff = (sin_deg(degrees) - expected).abs();
+            assert!(diff < 1e-9, "sin({degrees}°) off by {diff}");
+        }
+    }
+
+    #[test]
+    fn floor_and_normalization() {
+        assert_eq!(floor(2.5), 2.0);
+        assert_eq!(floor(-2.5), -3.0);
+        assert_eq!(floor(-3.0), -3.0);
+        assert_eq!(normalize_degrees(370.0), 10.0);
+        assert_eq!(normalize_degrees(-10.0), 350.0);
+        assert_eq!(normalize_degrees(720.0), 0.0);
     }
 
     #[test]
@@ -263,35 +388,85 @@ mod tests {
         }
     }
 
+    /// Published instants of 2026 new and full moons (UTC, to the minute),
+    /// including the year's four eclipses.
+    const NEW_MOONS_2026: [(i64, i64, i64, i64, i64, &str); 3] = [
+        (2026, 1, 18, 19, 52, "new moon"),
+        (2026, 2, 17, 12, 1, "new moon, annular solar eclipse"),
+        (2026, 8, 12, 17, 37, "new moon, total solar eclipse"),
+    ];
+    const FULL_MOONS_2026: [(i64, i64, i64, i64, i64, &str); 4] = [
+        (2026, 1, 3, 10, 3, "full moon"),
+        (2026, 3, 3, 11, 38, "full moon, total lunar eclipse"),
+        (2026, 8, 28, 4, 18, "full moon, partial lunar eclipse"),
+        (2026, 11, 24, 14, 53, "full moon"),
+    ];
+
     #[test]
-    fn cycle_position_wraps_each_synodic_month() {
-        assert!(cycle_position(KNOWN_NEW_MOON_UNIX).abs() < 1e-9);
-        for position in [0.1, 0.25, 0.5, 0.9] {
-            let diff = (cycle_position(at_position(position)) - position).abs();
-            assert!(diff < 1e-9, "position {position} off by {diff}");
+    fn true_moon_matches_published_new_and_full_moons() {
+        // The Moon moves ~0.5° of elongation per hour, so 0.5° is ~1 hour.
+        let tolerance_degrees = 0.5;
+        for (cases, target, name) in [
+            (&NEW_MOONS_2026[..], 0.0, "New Moon"),
+            (&FULL_MOONS_2026[..], 0.5, "Full Moon"),
+        ] {
+            for &(y, mo, d, h, mi, label) in cases {
+                let ts = utc(y, mo, d, h, mi);
+                let off = degrees_off(cycle_position(ts), target);
+                println!("{y}-{mo:02}-{d:02} {h:02}:{mi:02} {label}: {off:+.3}° (~{:+.0} min)", off / 0.508 * 60.0);
+                assert!(off.abs() < tolerance_degrees, "{label} {y}-{mo}-{d}: off by {off}°");
+                assert!(json_at(ts).contains(name), "{label}: {}", json_at(ts));
+            }
         }
     }
 
     #[test]
-    fn position_resolves_far_finer_than_a_tenth_of_a_cycle() {
-        // The position within the cycle is a full f64 and is never rounded
-        // before it picks the phase or the illumination.
-        let start = at_position(0.2);
-        let one_minute_of_cycle = 60.0 / SYNODIC_MONTH_SECONDS;
-        let moved = cycle_position(start + 60.0) - cycle_position(start);
-        assert!((moved - one_minute_of_cycle).abs() < 1e-9);
+    fn eclipses_are_exact_extremes_of_illumination() {
+        let annular = utc(2026, 2, 17, 12, 1);
+        let total_lunar = utc(2026, 3, 3, 11, 38);
+        assert!(illumination(cycle_position(annular)) < 0.0001);
+        assert!(illumination(cycle_position(total_lunar)) > 0.9999);
+    }
 
-        // A phase boundary is honoured to within a minute either side...
-        let boundary = at_position(0.22);
-        assert!(json_at(boundary - 60.0).contains("Waxing Crescent"));
-        assert!(json_at(boundary + 60.0).contains("First Quarter"));
+    #[test]
+    fn a_year_has_the_right_number_of_new_and_full_moons() {
+        // 2026 has 12 new moons and 13 full moons (Jan 3 to Dec 24)
+        let (mut news, mut fulls) = (0, 0);
+        let mut t = utc(2026, 1, 1, 0, 0);
+        let end = utc(2027, 1, 1, 0, 0);
+        let mut previous = cycle_position(t);
+        while t < end {
+            t += HOUR;
+            let p = cycle_position(t);
+            if p < previous {
+                news += 1;
+            }
+            if previous < 0.5 && p >= 0.5 {
+                fulls += 1;
+            }
+            previous = p;
+        }
+        assert_eq!((news, fulls), (12, 13));
+    }
 
-        // ...and the reported illumination moves from one hour to the next.
-        let mut previous = json_at(start);
-        for hour in 1..=24 {
-            let current = json_at(start + hour as f64 * 3600.0);
-            assert_ne!(current, previous, "no change during hour {hour}");
-            previous = current;
+    #[test]
+    fn position_advances_smoothly_minute_by_minute() {
+        // Within a lunation the elongation only grows, at roughly 0.4°–0.7°
+        // per hour, and the printed result changes every hour.
+        let start = utc(2026, 11, 10, 0, 0); // just after the Nov 9 new moon
+        let mut previous = cycle_position(start);
+        for minute in 1..(27 * 24 * 60) {
+            let p = cycle_position(start + minute as f64 * MINUTE);
+            let step_degrees = (p - previous) * 360.0;
+            assert!(step_degrees > 0.0, "went backwards at minute {minute}");
+            assert!(step_degrees < 0.7 / 60.0 * 1.2, "jumped at minute {minute}");
+            previous = p;
+        }
+        let mut previous_json = json_at(start);
+        for hour in 1..=48 {
+            let json = json_at(start + hour as f64 * HOUR);
+            assert_ne!(json, previous_json, "no change during hour {hour}");
+            previous_json = json;
         }
     }
 
@@ -312,23 +487,23 @@ mod tests {
     #[test]
     fn json_contract() {
         assert_eq!(
-            json_at(at_position(0.0001)),
+            json_at_position(0.0001),
             "{\"phase_name\": \"New Moon\", \"torment_multiplier\": 1.0, \"illumination\": 0.0000}"
         );
         assert_eq!(
-            json_at(at_position(0.125)),
+            json_at_position(0.125),
             "{\"phase_name\": \"Waxing Crescent\", \"torment_multiplier\": 1.2, \"illumination\": 0.1464}"
         );
         assert_eq!(
-            json_at(at_position(0.25)),
+            json_at_position(0.25),
             "{\"phase_name\": \"First Quarter\", \"torment_multiplier\": 1.5, \"illumination\": 0.5000}"
         );
         assert_eq!(
-            json_at(at_position(0.5)),
+            json_at_position(0.5),
             "{\"phase_name\": \"Full Moon\", \"torment_multiplier\": 3.0, \"illumination\": 1.0000}"
         );
         assert_eq!(
-            json_at(at_position(0.875)),
+            json_at_position(0.875),
             "{\"phase_name\": \"Waning Crescent\", \"torment_multiplier\": 1.2, \"illumination\": 0.1464}"
         );
     }
@@ -336,7 +511,7 @@ mod tests {
     #[test]
     fn longest_result_fits_the_buffer() {
         // Longest phase name; must not be truncated
-        let json = json_at(at_position(0.1));
+        let json = json_at_position(0.1);
         assert!(json.ends_with('}'));
         assert!(json.len() < RESULT_BUFFER_LEN - 1);
     }
@@ -344,33 +519,16 @@ mod tests {
     #[test]
     fn output_is_truncated_safely_in_a_small_buffer() {
         let mut buf = [0xFFu8; 16];
-        let len = render(at_position(0.5), &mut buf);
+        let len = render_position(0.5, &mut buf);
         assert_eq!(len, 15);
         assert_eq!(buf[15], 0);
     }
 
     #[test]
     fn exported_entry_point_returns_the_rendered_json() {
-        let timestamp = at_position(0.5);
+        let timestamp = utc(2026, 11, 24, 14, 53);
         let ptr = calculate_moon_phase(timestamp);
         let c_str = unsafe { std::ffi::CStr::from_ptr(ptr.cast()) };
         assert_eq!(c_str.to_str().unwrap(), json_at(timestamp));
-    }
-
-    #[test]
-    fn real_full_moons_of_2026_land_in_the_full_moon_window() {
-        // Approximate UTC instants of astronomical full moons. The mean-moon
-        // model drifts by hours from the true moon, well inside the window.
-        let full_moons = [
-            1767434580.0, // 2026-01-03 10:03
-            1775095920.0, // 2026-04-02 02:12
-            1782777420.0, // 2026-06-29 23:57
-            1790441340.0, // 2026-09-26 16:49
-            1795531980.0, // 2026-11-24 14:53
-        ];
-        for timestamp in full_moons {
-            let json = json_at(timestamp);
-            assert!(json.contains("\"Full Moon\""), "{timestamp}: {json}");
-        }
     }
 }

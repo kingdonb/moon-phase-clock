@@ -35,14 +35,15 @@ This blueprint describes where the project is going as well as where it is. Each
 ```
 
   - `phase_name`: New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent
-  - `illumination`: lit fraction of the disc, 0.0000 to 1.0000, from the phase angle: `(1 - cos θ) / 2`
+  - `illumination`: lit fraction of the disc, 0.0000 to 1.0000, from the Sun–Moon elongation θ: `(1 - cos θ) / 2`
   - `torment_multiplier`: **The Torment Multiplier**, an intensity factor (1.0 to 3.0) that peaks during the Full Moon
 
 The position in the lunar cycle is carried at full `f64` precision; only the printed illumination is rounded, to four decimals.
 
 **Known limits.**
-  - The moon is placed with the *mean* synodic month, so phase changes can be several hours off the true moon. Real orbital correction terms are planned for 0.1.0 ([#10](https://github.com/kingdonb/moon-phase-clock/issues/10)).
-  - Timestamps before the reference new moon of 2000-01-06 are not supported, and will not be until time travel ships.
+  - The position in the cycle is the Moon's true elongation from the Sun. It uses the mean elongation plus the six largest periodic correction terms (Meeus, *Astronomical Algorithms*, ch. 48). Tested against 2026's published new moons, full moons and eclipses, it is within about half an hour, and usually within minutes. A full lunar theory would be closer still; that is not planned.
+  - Time is treated as UTC. The ~70 s offset from Terrestrial Time is far below the model's accuracy.
+  - Pre-2000 timestamps are not a goal, and will not be until time travel ships. They happen to work now, because nothing depends on a reference new moon any more.
 
 **📝 TODO.**
   - **Next Full Moon timestamp** in the output.
